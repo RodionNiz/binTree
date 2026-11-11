@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <cstdlib>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,33 +20,29 @@ struct TextStates
     String* strings;
 };
 
-TextStates ParseText (FILE* readingFile, char* const fileName);
+TextStates* ParseText (FILE* readingFile, char* const fileName);
 size_t CountFileSize (char* const fileName);
-char*  ReadFile       (size_t* fileSize, FILE* file);
+char*  ReadFile      (size_t* fileSize, FILE* file);
 size_t CountStrings  (char* text, size_t textSize);
 size_t FillIndex     (String* originalTextStrings, char* text, size_t textSize);
+void   DelTextStates (TextStates* states);
 
-TextStates ParseText (FILE* readingFile, char* const fileName)
+TextStates* ParseText (FILE* readingFile, char* const fileName)
 {
     assert (readingFile != nullptr);
     assert (fileName != nullptr);
 
-    TextStates states = {};
+    TextStates* states = (TextStates*) calloc (1, sizeof (TextStates));
 
-    states.textLen = CountFileSize (fileName);
-    states.text    = ReadFile (&(states.textLen), readingFile);
-    states.nOfStr  = CountStrings (states.text, states.textLen);
-    states.strings = (String*) calloc (states.nOfStr, sizeof (states.strings [0]));
-    if (!states.strings)
-    {
-        printf ("strings arr calloc err\n");
-    }
-    states.nOfGoodStr = FillIndex (states.strings, states.text, states.textLen);
-    states.strings    = (String*) realloc (states.strings, states.nOfGoodStr * sizeof (states.strings [0]));
-    if (!states.strings)
-    {
-        printf ("strings arr realloc err\n");
-    }
+    states->textLen = CountFileSize (fileName);
+    states->text    = ReadFile (&(states->textLen), readingFile);
+    states->nOfStr  = CountStrings (states->text, states->textLen);
+    states->strings = (String*) calloc (states->nOfStr, sizeof (states->strings [0]));
+    if (!states->strings) printf ("strings arr calloc err\n");
+
+    states->nOfGoodStr = FillIndex (states->strings, states->text, states->textLen);
+    states->strings    = (String*) realloc (states->strings, states->nOfGoodStr * sizeof (states->strings [0]));
+    if (!states->strings) printf ("strings arr realloc err\n");
 
     return states;
 }
@@ -128,19 +125,25 @@ size_t FillIndex (String* originalTextStrings, char* text, size_t textSize)
 
         if (strLen)
         {
-            newStr.len = strLen;
+            newStr.len = strLen - 1;
             newStr.strPtr = text + count - strLen + 1;
         }
 
         while (text [count] == ')')
         {
-            text [count] = '\0';
-            count ++;
-        }
-        originalTextStrings [strCount] = newStr;
-        printf ("count = %zu, max = %zu\n", count, textSize);
+            text [count++] = '\0';
+        } 
+
+        originalTextStrings [strCount] = newStr;\
         strCount++;
     }
 
     return strCount;
+}
+
+void DelTextStates (TextStates* states)
+{
+    free (states->strings);
+    free (states->text);
+    free (states);
 }

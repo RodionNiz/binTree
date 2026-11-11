@@ -49,6 +49,8 @@ void LinkLeft (treeNode* child, treeNode* parent)
     assert (parent != nullptr);
     assert (parent->left  == nullptr);
     assert (child->parent == nullptr);
+    
+    printf ("was in left\n");
 
     parent->left = child;
     child->parent = parent;
@@ -99,35 +101,40 @@ tree* BuildPrev (const char* fileName, String* strings)
 
     FILE* treeFile = fopen (fileName, "r");
 
-    ParseRec (treeFile, tree->root, 0, strings);
+    size_t nOfParsStr = 0;
+    ParseRec (treeFile, tree->root, &nOfParsStr, strings);
     printf ("aft parse\n");
     return tree;
 }
-
-void ParseRec (FILE* treeFile, treeNode* node, size_t nParsingNode, String* strings)
+//TODO - баг с закрывающей скобкой и длинной строк
+void ParseRec (FILE* treeFile, treeNode* node, size_t* nParsingNode, String* strings)
 {
     if (fgetc (treeFile) == '(')
     {
-        node->value = strings [nParsingNode].strPtr;
-        fseek (treeFile, strings [nParsingNode].len, SEEK_CUR);
-        nParsingNode++;
+        node->value = strings [*nParsingNode].strPtr;
+        fseek (treeFile, strings [*nParsingNode].len, SEEK_CUR);
+        ++*nParsingNode;
         GraphDump (node);
 
-        if (fgetc (treeFile) == ')') return;
-        ungetc ('(', treeFile);
-
+        int curChar = fgetc (treeFile);
+        if (curChar == ')') return;
+        if (curChar != '(') printf ("err, expected symbol is '(', the real is \'%c\', %d\n", curChar, curChar);
+        ungetc (curChar, treeFile);
+ 
         treeNode* left  = NewTreeNode (GLOBAL_TREE_VAL_POISON);
         treeNode* right = NewTreeNode (GLOBAL_TREE_VAL_POISON);
 
         //TODO - вместо создания и удаления не создавать
         ParseRec (treeFile, left, nParsingNode, strings);
-        (left->value == GLOBAL_TREE_VAL_POISON) ? DelTreeNode (left) : LinkLeft  (left, node);
+        (left->value == GLOBAL_TREE_VAL_POISON) ? DelTreeNode (left) : LinkLeft (left, node);
         GraphDump (node);
         
         ParseRec (treeFile, right, nParsingNode, strings);
         (right->value == GLOBAL_TREE_VAL_POISON) ? DelTreeNode (right) : LinkRight (right, node);
 
-        fgetc (treeFile);
+        curChar = fgetc (treeFile);
+        if (curChar != ')') printf ("err, expected symbol is ')', the real is \'%c\', %d\n", curChar, curChar);
+        
         GraphDump (node);
     }
     else return;    
