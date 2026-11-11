@@ -49,8 +49,6 @@ void LinkLeft (treeNode* child, treeNode* parent)
     assert (parent != nullptr);
     assert (parent->left  == nullptr);
     assert (child->parent == nullptr);
-    
-    printf ("was in left\n");
 
     parent->left = child;
     child->parent = parent;
@@ -63,26 +61,71 @@ void LinkRight (treeNode* child, treeNode* parent)
     assert (parent->right == nullptr);
     assert (child->parent == nullptr);
 
-    printf ("was here\n");
-
     parent->right = child;
     child->parent = parent;
 }
-
+//TODO - verify
 errCodes VerifyTree ()
 {
     return TreeOk;
 }
 
+void BufferClean ()
+{
+    while (1)
+    {
+        int tempChar = getchar ();                                  
+        if (tempChar == '\n' || tempChar == EOF)
+        {
+            break;
+        }
+    }
+}
+
+void AskNode (treeNode* node)
+{
+    printf ("%s?\nY/N:\n", node->value);
+    char ans = 0;
+    while (1)
+    {
+        scanf ("%c", &ans);
+        BufferClean ();
+        if (ans == 'Y' || ans == 'N') break;
+        printf ("Yor answer has unsupported type!\nYou can answer Y/N\n");
+    }
+
+    if (ans == 'Y')
+    {
+        if (node->left) AskNode (node->left);
+        else CheckAnswer (node->left);
+        return;
+    } 
+
+    if (ans == 'N')
+    {
+        if (node->right) AskNode (node->right);
+        else CheckAnswer (node->right);
+        return;
+    } 
+}
+
+void CheckAnswer (treeNode* node)
+{
+    printf ("1111111111\n");
+}
+
 void DupmTreePrev (treeNode* node)
 {
-    printf ("(");
-    printf (IOTYPE, node->value);
-    if (node->left)  DupmTreePrev (node->left);
-    else printf ("()");
-    if (node->right) DupmTreePrev (node->right);
-    else printf ("()");
-    printf (")");
+    if (*node->value != '\0')
+    {
+        printf ("(");
+        printf (IOTYPE, node->value);
+        if (node->left)  DupmTreePrev (node->left);
+        else printf ("()");
+        if (node->right) DupmTreePrev (node->right);
+        else printf ("()");
+        printf (")");
+    }
 }
 
 void DupmTreeIn (treeNode* node)
@@ -94,19 +137,16 @@ void DupmTreeIn (treeNode* node)
     printf (")");
 }
 
-tree* BuildPrev (const char* fileName, String* strings)
+tree* BuildPrev (FILE* treeFile, String* strings)
 {
+    fseek (treeFile, 0, SEEK_SET);
     tree* tree = NewTree (GLOBAL_TREE_VAL_POISON);
-    printf ("bfr parse\n");
-
-    FILE* treeFile = fopen (fileName, "r");
 
     size_t nOfParsStr = 0;
     ParseRec (treeFile, tree->root, &nOfParsStr, strings);
-    printf ("aft parse\n");
     return tree;
 }
-//TODO - баг с закрывающей скобкой и длинной строк
+
 void ParseRec (FILE* treeFile, treeNode* node, size_t* nParsingNode, String* strings)
 {
     if (fgetc (treeFile) == '(')
@@ -126,14 +166,15 @@ void ParseRec (FILE* treeFile, treeNode* node, size_t* nParsingNode, String* str
 
         //TODO - вместо создания и удаления не создавать
         ParseRec (treeFile, left, nParsingNode, strings);
-        (left->value == GLOBAL_TREE_VAL_POISON) ? DelTreeNode (left) : LinkLeft (left, node);
+        (left->value [0] == '\0') ? DelTreeNode (left) : LinkLeft (left, node);
         GraphDump (node);
         
         ParseRec (treeFile, right, nParsingNode, strings);
-        (right->value == GLOBAL_TREE_VAL_POISON) ? DelTreeNode (right) : LinkRight (right, node);
+        (right->value [0] == '\0') ? DelTreeNode (right) : LinkRight (right, node);
 
         curChar = fgetc (treeFile);
         if (curChar != ')') printf ("err, expected symbol is ')', the real is \'%c\', %d\n", curChar, curChar);
+            
         
         GraphDump (node);
     }
