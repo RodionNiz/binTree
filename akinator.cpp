@@ -1,5 +1,4 @@
 #include "akinator.h"
-#include <cstdio>
 
 treeNode* NewTreeNode (value_t value)
 {
@@ -11,6 +10,7 @@ treeNode* NewTreeNode (value_t value)
     }
 
     newNode->value = value;
+    GraphDump (newNode);
     return newNode;
 }
 
@@ -31,6 +31,7 @@ tree* NewTree (value_t rootValue)
         return nullptr;
     }
     newTree->root = NewTreeNode (rootValue);
+    newTree->root->parent = newTree->root;
     newTree->nOfNode = 1;
 
     return newTree;
@@ -52,6 +53,7 @@ void LinkLeft (treeNode* child, treeNode* parent)
 
     parent->left = child;
     child->parent = parent;
+    GraphDump (parent);
 }
 
 void LinkRight (treeNode* child, treeNode* parent)
@@ -63,14 +65,55 @@ void LinkRight (treeNode* child, treeNode* parent)
 
     parent->right = child;
     child->parent = parent;
+    GraphDump (parent);
 }
 //TODO - verify
-errCodes VerifyTree ()
+
+errCtx VerifyTree (tree* tree)
 {
-    return TreeOk;
+    errCtx ctx = {.badNode = nullptr, .code = TreeOk};
+    if (tree->root->left)  RecParChec (tree->root->left,  &ctx);
+    if (tree->root->right) RecParChec (tree->root->right, &ctx);
+    if (ctx.badNode) 
+    {
+        GraphDump (tree->root);
+        return ctx;
+    }
+    return ctx;
 }
 
-void BufferClean ()
+void RecParChec (treeNode* node, errCtx* ctx) 
+{
+
+    if (!node->parent) 
+    {
+        ctx->badNode = node;
+        ctx->code = ParentErr;
+        return;
+    }
+
+    if (node != node->parent->left && node != node->parent->right)
+    {
+        ctx->badNode = node;
+        ctx->code = ParentErr;
+        return;
+    }
+
+    if (node->left)
+    {
+        RecParChec (node->left, ctx);
+        if (ctx->code != TreeOk) return;
+    }
+    if (node->right)
+    {
+        RecParChec (node->right, ctx);
+        if (ctx->code != TreeOk) return;
+    }
+    return; 
+}
+
+
+inline void BufferClean ()
 {
     while (1)
     {
@@ -82,9 +125,55 @@ void BufferClean ()
     }
 }
 
-void AskNode (treeNode* node)
+void GuessLogic (treeNode* node, treeNode** badNode)
 {
     printf ("%s?\nY/N:\n", node->value);
+    char ans = GetYorN ();
+
+    if (ans == 'Y')
+    {
+        if (node->left) GuessLogic (node->left, badNode);
+        else printf ("HAHAHA idi gylai\n");
+        return;
+    } 
+
+    if (ans == 'N')
+    {
+        if (node->right) GuessLogic (node->right, badNode);
+        else *badNode = node;
+        return;
+    } 
+}
+
+#define ANSLEN 20
+//TODO - подумать над структурой
+treeNode* NewAnswer (treeNode* ansNode)
+{
+    printf ("Vot yrod. Kakoy otvet?\n");
+    char* newAns = (char*) calloc (ANSLEN, sizeof (char));
+    if (!newAns) printf ("new ans buffer allocation err\n");
+    scanf ("%[^\n]", newAns);
+    BufferClean ();
+    treeNode* newAnsNode = NewTreeNode (newAns);
+
+    treeNode* oldAnsNode = NewTreeNode (ansNode->value);
+
+    printf ("Chem %s otlichaetsa ot %s?\n V otlichii ot %s on(a):\n", ansNode->value, newAnsNode->value, ansNode->value);
+    char* newTag = (char*) calloc (ANSLEN, sizeof (char));
+    if (!newTag) printf ("new tag buffer allocation err\n");
+    scanf ("%[^\n]", newTag);
+    BufferClean ();
+    ansNode->value = newTag;
+
+    LinkLeft  (newAnsNode, ansNode);
+    LinkRight (oldAnsNode, ansNode);
+
+    return newAnsNode;
+}
+#undef ANSLEN
+
+char GetYorN ()
+{
     char ans = 0;
     while (1)
     {
@@ -93,25 +182,7 @@ void AskNode (treeNode* node)
         if (ans == 'Y' || ans == 'N') break;
         printf ("Yor answer has unsupported type!\nYou can answer Y/N\n");
     }
-
-    if (ans == 'Y')
-    {
-        if (node->left) AskNode (node->left);
-        else CheckAnswer (node->left);
-        return;
-    } 
-
-    if (ans == 'N')
-    {
-        if (node->right) AskNode (node->right);
-        else CheckAnswer (node->right);
-        return;
-    } 
-}
-
-void CheckAnswer (treeNode* node)
-{
-    printf ("1111111111\n");
+    return ans;
 }
 
 void DupmTreePrev (treeNode* node)
@@ -154,7 +225,7 @@ void ParseRec (FILE* treeFile, treeNode* node, size_t* nParsingNode, String* str
         node->value = strings [*nParsingNode].strPtr;
         fseek (treeFile, strings [*nParsingNode].len, SEEK_CUR);
         ++*nParsingNode;
-        GraphDump (node);
+        
 
         int curChar = fgetc (treeFile);
         if (curChar == ')') return;
@@ -163,20 +234,13 @@ void ParseRec (FILE* treeFile, treeNode* node, size_t* nParsingNode, String* str
  
         treeNode* left  = NewTreeNode (GLOBAL_TREE_VAL_POISON);
         treeNode* right = NewTreeNode (GLOBAL_TREE_VAL_POISON);
-
-        //TODO - вместо создания и удаления не создавать
-        ParseRec (treeFile, left, nParsingNode, strings);
-        (left->value [0] == '\0') ? DelTreeNode (left) : LinkLeft (left, node);
-        GraphDump (node);
-        
+        ParseRec (treeFile, left,  nParsingNode, strings);
         ParseRec (treeFile, right, nParsingNode, strings);
+        (left->value  [0] == '\0') ? DelTreeNode (left)  : LinkLeft  (left, node);
         (right->value [0] == '\0') ? DelTreeNode (right) : LinkRight (right, node);
 
         curChar = fgetc (treeFile);
         if (curChar != ')') printf ("err, expected symbol is ')', the real is \'%c\', %d\n", curChar, curChar);
-            
-        
-        GraphDump (node);
     }
     else return;    
 }
