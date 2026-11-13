@@ -1,19 +1,37 @@
 #include "akinator.cpp"
+#include <cstdio>
 
 
 int main (int argc, char* argv [])
 {
-    FILE* file = fopen (argv [1], "r");
+    const char* fileName = ((argc - 1) >= 1) ? argv [1] : "tree.txt";
+    FILE* file = fopen (fileName, "r");
 
-    TextStates states = ParseText (file, argv [1]);
+    TextStates* states = ReadText (file, fileName);
 
-    printf ("endparse\n");
-    tree* newTree = BuildPrev (argv [1], states.strings);
+    tree* newTree = BuildPrev (file, states->strings);
 
-    GraphDump (newTree->root);
+    GraphDump (newTree->root, nullptr);
 
-    for (int i = 0; i < states.nOfGoodStr; i++)
+    treeNode* node1 = FindNode (newTree->root, "Igor Sizanov");
+    treeNode* node2 = FindNode (newTree->root, "savelyi");
+
+    Difference (node1, node2);
+
+    treeNode* badAnsNode = nullptr;
+    treeNode* newAnsNode = nullptr;
+    //GuessLogic (newTree->root, &badAnsNode);
+    if (badAnsNode) 
     {
-        printf ("\'%s\'\n", states.strings [i].strPtr);
+        newAnsNode = NewAnswer (badAnsNode);
+        GraphDump (newTree->root, nullptr);
+
+        FILE* newData = fopen (argv [1], "w");
+        FDumpTreePrev (newData, newTree->root);
+        fclose (newData);
     }
+
+    if (newAnsNode) free (newAnsNode->value);
+    DelTextStates (states);
+    fclose (file);
 }

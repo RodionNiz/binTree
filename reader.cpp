@@ -20,14 +20,14 @@ struct TextStates
     String* strings;
 };
 
-TextStates* ReadText (FILE* readingFile, char* const fileName);
-size_t CountFileSize (char* const fileName);
+TextStates* ReadText (FILE* readingFile, const char* const fileName);
+size_t CountFileSize (const char* const fileName);
 char*  ReadFile      (size_t* fileSize, FILE* file);
 size_t CountStrings  (char* text, size_t textSize);
 size_t FillIndex     (String* originalTextStrings, char* text, size_t textSize);
 void   DelTextStates (TextStates* states);
 
-TextStates* ReadText (FILE* readingFile, char* const fileName)
+TextStates* ReadText (FILE* readingFile, const char* const fileName)
 {
     assert (readingFile != nullptr);
     assert (fileName != nullptr);
@@ -47,7 +47,7 @@ TextStates* ReadText (FILE* readingFile, char* const fileName)
     return states;
 }
 
-size_t CountFileSize (char* const fileName)
+size_t CountFileSize (const char* const fileName)
 {
     assert (fileName != nullptr);
     struct stat fileStat = {};

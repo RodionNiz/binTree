@@ -20,7 +20,7 @@ struct tree
     int nOfNode;
 };
 
-value_t GLOBAL_TREE_VAL_POISON = "";
+value_t GLOBAL_TREE_VAL_POISON = nullptr;
 
 treeNode* NewTreeNode (value_t value);
 void      DelTreeNode (treeNode* node);
@@ -31,8 +31,7 @@ void LinkLeft  (treeNode* child, treeNode* parent);
 void LinkRight (treeNode* child, treeNode* parent);
 
 void Insert       (tree* tree, value_t value);
-void DupmTreePrev (treeNode* node);
-void DupmTreeIn   (treeNode* node);
+
 
 enum errCodes 
 {
@@ -44,16 +43,20 @@ struct errCtx
 {
     treeNode* badNode;
     errCodes code;
+    size_t line;
 };
 
-errCtx VerifyTree (tree* tree);
+errCodes VerifyTree (treeNode* node, size_t assertline);
 void   RecParChec (treeNode* node, errCtx* ctx);
 
 
 tree* BuildPrev (FILE* treeFile, String* strings);
 void  ParseRec  (FILE* treeFile, treeNode* node, size_t* nParsingNode, String* strings);
 
-void GraphDump   (treeNode* node);
+void DumpTreePrev  (treeNode* node);
+void DumpTreeIn    (treeNode* node);
+void FDumpTreePrev (FILE* dumpFile, treeNode* node);
+void GraphDump   (treeNode* node, errCtx* ctx);
 void CreateNodes (treeNode* node, FILE* dotFile);
 void CreateLinks (treeNode* node, FILE* dotFile);
 
@@ -61,3 +64,8 @@ inline void BufferClean ();
 char GetYorN        ();
 void GuessLogic     (treeNode* node, treeNode** badNode);
 treeNode* NewAnswer (treeNode* ansNode);
+
+treeNode*  FindNode    (treeNode* node, const char* object);
+treeNode** GetWay      (treeNode* node, int* deep);
+void       Opredelenie (treeNode* node);
+void       Difference  (treeNode* node1, treeNode* node2);
