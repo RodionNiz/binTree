@@ -91,7 +91,7 @@ static size_t ColorGen  (treeNode* node);
 static void BufferClean ();
 static char GetYorN     ();
 void GuessLogic  (treeNode* node, treeNode** badNode);
-static void NewAnswer   (treeNode* ansNode);
+void NewAnswer   (treeNode* ansNode);
 
 treeNode*  FindNode    (treeNode* node, const char* object);
 treeNode** GetWay      (treeNode* node, int* deep);

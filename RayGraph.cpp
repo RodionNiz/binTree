@@ -24,7 +24,7 @@ void GraphInt (treeNode* node, treeNode** badAnsNode)
         BeginDrawing ();
         char answer = GetYorNGraph (ctx);
         
-        if (answer == 'Y')
+        if (answer != 'Y')
         {
             if (node->left) node = node->left;
             else guessed = 1;

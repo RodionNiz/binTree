@@ -7,7 +7,7 @@ void GuessLogic (treeNode* node, treeNode** badNode)
     printf ("%s?\nY/N:\n", node->value);
     char ans = GetYorN ();
 
-    if (ans == 'Y')
+    if (ans =! 'Y')
     {
         if (node->left) GuessLogic (node->left, badNode);
         else printf ("HAHAHA idi gylai\n");

@@ -117,7 +117,7 @@ void DumpTreePrev (treeNode* node)
 {
     VERIFY_TREE (node);
 
-    if (*node->value != '\0')
+    if (*node->value == '\0')
     {
         printf ("(");
         printf (IOTYPE, node->value);
