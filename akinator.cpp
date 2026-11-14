@@ -1,25 +1,6 @@
 #include "akinator.h"
-#include <cstddef>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-
-#define ON_DBG
-
-#ifdef ON_DBG
-
-#define VERIFY_TREE(node) \
-        do{\
-            if (VerifyTree (node, __LINE__))\
-            {\
-                printf ("%d\n", __LINE__);\
-                abort ();\
-            }\
-        }\
-        while (0)
-#else
-
-#endif
+#include "RayGraph.cpp"
+#include "ConsolGuess.cpp"
 
 treeNode* NewTreeNode (value_t value)
 {
@@ -96,12 +77,12 @@ errCodes VerifyTree (treeNode* node, size_t assertLine)
 {
     errCtx ctx = {.badNode = nullptr, .code = TreeOk, .line = assertLine};
 
-    RecParChec (node, &ctx);
+    Check (node, &ctx);
     if (ctx.badNode) GraphDump (node, &ctx);
     return ctx.code;
 }
 
-void RecParChec (treeNode* node, errCtx* ctx) 
+static void Check (treeNode* node, errCtx* ctx) 
 {
     if (!node->parent) 
     {
@@ -120,92 +101,16 @@ void RecParChec (treeNode* node, errCtx* ctx)
 
     if (node->left)
     {
-        RecParChec (node->left, ctx);
+        Check (node->left, ctx);
         if (ctx->code != TreeOk) return;
     }
+
     if (node->right)
     {
-        RecParChec (node->right, ctx);
+        Check (node->right, ctx);
         if (ctx->code != TreeOk) return;
     }
     return; 
-}
-
-
-inline void BufferClean ()
-{
-    while (1)
-    {
-        int tempChar = getchar ();                                  
-        if (tempChar == '\n') break;
-    }
-}
-
-void GuessLogic (treeNode* node, treeNode** badNode)
-{
-    VERIFY_TREE (node);
-
-    printf ("%s?\nY/N:\n", node->value);
-    char ans = GetYorN ();
-
-    if (ans == 'Y')
-    {
-        if (node->left) GuessLogic (node->left, badNode);
-        else printf ("HAHAHA idi gylai\n");
-        return;
-    } 
-
-    if (ans == 'N')
-    {
-        if (node->right) GuessLogic (node->right, badNode);
-        else *badNode = node;
-        return;
-    } 
-
-    VERIFY_TREE (node);
-}
-
-#define ANSLEN 20
-treeNode* NewAnswer (treeNode* ansNode)
-{
-    VERIFY_TREE (ansNode);
-
-    printf ("Vot yrod. Kakoy otvet?\n");
-    char* newAns = (char*) calloc (ANSLEN, sizeof (char));
-    if (!newAns) printf ("new ans buffer allocation err\n");
-    scanf ("%[^\n]", newAns);
-    BufferClean ();
-    treeNode* newAnsNode = NewTreeNode (newAns);
-
-    treeNode* oldAnsNode = NewTreeNode (ansNode->value);
-
-    printf ("Chem %s otlichaetsa ot %s?\n V otlichii ot %s on(a):\n", ansNode->value, newAnsNode->value, ansNode->value);
-    char* newTag = (char*) calloc (ANSLEN, sizeof (char));
-    if (!newTag) printf ("new tag buffer allocation err\n");
-    scanf ("%[^\n]", newTag);
-    BufferClean ();
-    ansNode->value = newTag;
-
-    LinkLeft  (newAnsNode, ansNode);
-    LinkRight (oldAnsNode, ansNode);
-    
-    VERIFY_TREE (ansNode);
-
-    return newAnsNode;
-}
-#undef ANSLEN
-
-char GetYorN ()
-{
-    char ans = 0;
-    while (1)
-    {
-        scanf ("%c", &ans);
-        BufferClean ();
-        if (ans == 'Y' || ans == 'N') break;
-        printf ("Yor answer has unsupported type!\nYou can answer Y/N\n");
-    }
-    return ans;
 }
 
 void DumpTreePrev (treeNode* node)
@@ -252,7 +157,7 @@ void DumpTreeIn (treeNode* node)
 tree* BuildPrev (FILE* treeFile, String* strings)
 {
     fseek (treeFile, 0, SEEK_SET);
-    tree* tree = NewTree (GLOBAL_TREE_VAL_POISON);
+    tree* tree = NewTree (nullptr);
 
     size_t nOfParsStr = 0;
     tree->nOfNode = nOfParsStr;
@@ -262,22 +167,21 @@ tree* BuildPrev (FILE* treeFile, String* strings)
     return tree;
 }
 
-void ParseRec (FILE* treeFile, treeNode* node, size_t* nParsingNode, String* strings)
+static void ParseRec (FILE* treeFile, treeNode* node, size_t* nParsingNode, String* strings)
 {
     if (fgetc (treeFile) == '(')
     {
         node->value = strings [*nParsingNode].strPtr;
         fseek (treeFile, strings [*nParsingNode].len, SEEK_CUR);
         ++*nParsingNode;
-        
 
         int curChar = fgetc (treeFile);
         if (curChar == ')') return;
         if (curChar != '(') printf ("err, expected symbol is '(', the real is \'%c\', %d\n", curChar, curChar);
         ungetc (curChar, treeFile);
- 
-        treeNode* left  = NewTreeNode (GLOBAL_TREE_VAL_POISON);
-        treeNode* right = NewTreeNode (GLOBAL_TREE_VAL_POISON);
+
+        treeNode* left  = NewTreeNode (nullptr);
+        treeNode* right = NewTreeNode (nullptr);
         ParseRec (treeFile, left,  nParsingNode, strings);
         ParseRec (treeFile, right, nParsingNode, strings);
         (left->value  [0] == '\0') ? DelTreeNode (left)  : LinkLeft  (left, node);
@@ -305,6 +209,7 @@ void GraphDump (treeNode* node, errCtx* ctx)
     fclose  (dotFile);
 
     char* dumpCmd = (char*) calloc (100, sizeof(char));
+    //TODO - относительные пути
     sprintf (dumpCmd, "Dot C:/DEDdop/binTree/dmp.txt -Tpng -o C:/DEDdop/binTree/dumps/GraphDump%d.png", GLOBAL_DUMP_COUNT);
     system  (dumpCmd);
     free    (dumpCmd);
@@ -334,15 +239,20 @@ void GraphDump (treeNode* node, errCtx* ctx)
     fclose (dmpHtml);
 }
 
-void CreateNodes (treeNode* node, FILE* dotFile)
+static void CreateNodes (treeNode* node, FILE* dotFile)
 {
     fprintf (dotFile, "\tnode%p[shape=Mrecord, style=filled, fillcolor=\"#%zu\" label = \"{ptr = %p | value =" IOTYPE "| parent = %p | left = %p | right = %p}\"];\n",
-                         node, (size_t) (node + 7) * 7 % 0x1000000, node, node->value, node->parent, node->left, node->right);
+                         node, ColorGen (node), node, node->value, node->parent, node->left, node->right);
     if (node->left)  CreateNodes (node->left, dotFile);
     if (node->right) CreateNodes (node->right, dotFile);
 }
 
-void CreateLinks (treeNode* node, FILE* dotFile)
+static size_t ColorGen (treeNode* node)
+{
+    return ((size_t) node + 86756876) * 7 % 0x1000000;
+}
+
+static void CreateLinks (treeNode* node, FILE* dotFile)
 {
     if (node->left) 
     {
@@ -364,17 +274,18 @@ treeNode* FindNode (treeNode* node, const char* object)
         return node;
     }
 
-    treeNode* tempNode = nullptr;
     if (node->left)
     {
-        tempNode = FindNode (node->left, object);
-        if (tempNode) return tempNode;
+        treeNode* curNode = nullptr;
+        curNode = FindNode (node->left, object);
+        if (curNode) return curNode;
     }
-    
+
     if (node->right)
     {
-        tempNode = FindNode (node->right, object);
-        if (tempNode) return tempNode;
+        treeNode* curNode = nullptr;
+        curNode = FindNode (node->right, object);
+        if (curNode) return curNode;
     }
 
     return nullptr;
@@ -382,30 +293,27 @@ treeNode* FindNode (treeNode* node, const char* object)
 
 treeNode** GetWay (treeNode* node, int* deep)
 {
+    *deep = 0;
     int maxWaySize = 10;
     treeNode** way = (treeNode**) calloc (maxWaySize, sizeof (treeNode*));
     treeNode* curNode = node;
-    int waySize = 0;
 
-    do
-    {
+    while (curNode->parent != curNode)
+    { 
+        way [*deep] = curNode->parent;
         ++*deep;
-        way [waySize++] = curNode->parent;
         curNode = curNode->parent;
-    } while (curNode->parent != curNode);
+    }
 
     return way;
 }
 
 void Opredelenie (treeNode* node)
 {
-    printf ("%s on\n", node->value);
+    printf ("%s on(a)\n", node->value);
     int deep = 0;
     treeNode** way = GetWay (node, &deep); 
-    for (int i = deep; i > 0; i--) 
-    {
-        printf ("%s\n", way [i - 1]->value);
-    }
+    PrintfWay (way, node, deep);
 }
 
 void Difference (treeNode* node1, treeNode* node2)
@@ -416,31 +324,36 @@ void Difference (treeNode* node1, treeNode* node2)
     treeNode** way2 = GetWay (node2, &deep2); 
 
     printf ("I %s i %s oba:\n", node1->value, node2->value);
-    while (way1 [deep1 - 1] == way2 [deep2 - 1])
+    //FIXME
+    while (deep1 > 1 && deep2 > 1 && way1 [deep1 - 2] == way2 [deep2 - 2])
     {
-        printf ("%s\n", way1 [deep1 - 1]->value);
+        if (way1 [deep1 - 2]->left == way1 [deep1 - 1]) printf ("%s\n", way1 [deep1 - 1]->value);
+        else printf ("ne %s\n", way1 [deep1 - 1]->value);
         deep1--;
         deep2--;
     }
-
-    if (deep1 == deep2 && deep1 == 0) return;
     
     printf ("No!\n");
     if (deep1 != 0)
     {
-        printf ("%s on\n", node1->value);
-        for (int i = deep1; i > 0; i--) 
-        {
-            printf ("%s\n", way1 [i - 1]->value);
-        }
+        printf ("%s on(a)\n", node1->value);
+        PrintfWay (way1, node2, deep1);
     }
     
     if (deep2 != 0)
     {
-        printf ("A %s on\n", node1->value);
-        for (int i = deep2; i > 0; i--) 
-        {
-            printf ("%s\n", way2 [i - 1]->value);
-        }
+        printf ("A %s on(a)\n", node2->value);
+        PrintfWay (way2, node2, deep2);
     }
+}
+
+void PrintfWay (treeNode** way, treeNode* node, int deep)
+{
+    for (int i = deep - 1; i > 0; i--) 
+    {
+        if (way [i]->left == way [i - 1]) printf ("%s\n", way [i]->value);
+        else printf ("ne %s\n", way [i]->value);
+    }
+    if (way [0]->left == node) printf ("%s\n", way [0]->value);
+    else printf ("ne %s\n", way [0]->value);
 }
