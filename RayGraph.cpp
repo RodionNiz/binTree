@@ -5,7 +5,7 @@ void GraphInt (treeNode* node, treeNode** badAnsNode)
     float screenWidth = 1000;
     float screenHeight = 600;
     float buttonWidth = 450;
-    float buttonHeigh = 150;
+    float buttonHeigh = 150 ;
     float offset = 25;
     Rectangle buttonY = {.x = offset, .y = screenHeight - offset - buttonHeigh, .width = buttonWidth, .height = buttonHeigh};
     Rectangle buttonN = {.x = screenWidth - offset - buttonWidth, .y = screenHeight - offset - buttonHeigh, .width = buttonWidth, .height = buttonHeigh};
@@ -24,7 +24,7 @@ void GraphInt (treeNode* node, treeNode** badAnsNode)
         BeginDrawing ();
         char answer = GetYorNGraph (ctx);
         
-        if (answer != 'Y')
+        if (answer == 'Y')
         {
             if (node->left) node = node->left;
             else guessed = 1;
