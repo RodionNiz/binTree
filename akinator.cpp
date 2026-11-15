@@ -210,7 +210,7 @@ void GraphDump (treeNode* node, errCtx* ctx)
 
     char* dumpCmd = (char*) calloc (100, sizeof(char));
     //TODO - относительные пути
-    sprintf (dumpCmd, "Dot C:/DEDdop/binTree/dmp.txt -Tpng -o C:/DEDdop/binTree/dumps/GraphDump%d.png", GLOBAL_DUMP_COUNT);
+    sprintf (dumpCmd, "Dot dmp.txt -Tpng -o C:/DEDdop/binTree/dumps/GraphDump%d.png", GLOBAL_DUMP_COUNT);
     system  (dumpCmd);
     free    (dumpCmd);
 
@@ -281,7 +281,7 @@ treeNode* FindNode (treeNode* node, const char* object)
         if (curNode) return curNode;
     }
 
-    if (node->right)
+    else if (node->right)
     {
         treeNode* curNode = nullptr;
         curNode = FindNode (node->right, object);
@@ -306,45 +306,6 @@ treeNode** GetWay (treeNode* node, int* deep)
     }
 
     return way;
-}
-
-void Opredelenie (treeNode* node)
-{
-    printf ("%s on(a)\n", node->value);
-    int deep = 0;
-    treeNode** way = GetWay (node, &deep); 
-    PrintfWay (way, node, deep);
-}
-
-void Difference (treeNode* node1, treeNode* node2)
-{
-    int deep1 = 0;
-    treeNode** way1 = GetWay (node1, &deep1); 
-    int deep2 = 0;
-    treeNode** way2 = GetWay (node2, &deep2); 
-
-    printf ("I %s i %s oba:\n", node1->value, node2->value);
-    //FIXME
-    while (deep1 > 1 && deep2 > 1 && way1 [deep1 - 2] == way2 [deep2 - 2])
-    {
-        if (way1 [deep1 - 2]->left == way1 [deep1 - 1]) printf ("%s\n", way1 [deep1 - 1]->value);
-        else printf ("ne %s\n", way1 [deep1 - 1]->value);
-        deep1--;
-        deep2--;
-    }
-    
-    printf ("No!\n");
-    if (deep1 != 0)
-    {
-        printf ("%s on(a)\n", node1->value);
-        PrintfWay (way1, node2, deep1);
-    }
-    
-    if (deep2 != 0)
-    {
-        printf ("A %s on(a)\n", node2->value);
-        PrintfWay (way2, node2, deep2);
-    }
 }
 
 void PrintfWay (treeNode** way, treeNode* node, int deep)

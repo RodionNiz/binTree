@@ -77,8 +77,8 @@ void DrawCorAns (windowCtx ctx)
 {
     ClearBackground (RAYWHITE);
     int textSize = 75;
-    int offset = MeasureText ("Lox cvetochnyi", textSize) / 2;
-    DrawText ("Lox cvetochnyi", GetScreenWidth () - offset, GetScreenHeight () / 2 - textSize, textSize, BLACK);
+    int offset = MeasureText ("Lox cvetochnyi", textSize);
+    DrawText ("Lox cvetochnyi", (GetScreenWidth () - offset) / 2, GetScreenHeight () / 2 - textSize, textSize, BLACK);
 }
 
 char GetYorNGraph (windowCtx ctx)
@@ -125,7 +125,7 @@ void GetInputString (const char* prompt, char* buffer, int maxLen)
         ClearBackground (RAYWHITE);
         
         int inputWidth = MeasureText (prompt, 40);
-        DrawText (prompt, (GetScreenWidth () - inputWidth) / 2, 150, 75, DARKGRAY);
+        DrawText (prompt, (GetScreenWidth () - inputWidth) / 2, 150, 40, DARKGRAY);
 
         Rectangle inputBox = { 150, 250, 700, 80 };
         DrawRectangleLinesEx (inputBox, 3, BLACK);
@@ -155,10 +155,14 @@ void SplitGraph (treeNode* nodeToSplit)
     char* newTag = (char*) calloc (ANSLEN, sizeof (char));
     if (!newTag) printf ("new tag buffer allocation err\n");
     char* prompt = (char*) calloc (100, sizeof (char));  
-    sprintf (prompt,"Chem %s otlichaetsa ot %s?\n V otlichii ot %s on(a):\n", nodeToSplit->value, newAnsNode->value, nodeToSplit->value);
-    GetInputString ((const char*) prompt, newAns, ANSLEN);
+    sprintf (prompt,"Chem %s otlichaetsa ot %s?\n V otlichii ot %s on(a):\n", newAnsNode->value, nodeToSplit->value, nodeToSplit->value);
+    GetInputString ((const char*) prompt, newTag, ANSLEN);
+    free (prompt);
 
     treeNode* oldAnsNode = NewTreeNode (nodeToSplit->value);
-    nodeToSplit->value = prompt;
+    nodeToSplit->value = newTag;
+
+    LinkLeft (newAnsNode, nodeToSplit);
+    LinkRight (oldAnsNode, nodeToSplit);
 }
 #undef ANSLEN

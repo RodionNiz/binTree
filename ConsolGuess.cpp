@@ -1,4 +1,5 @@
 #include "akinator.h"
+#include <cstdio>
 
 void GuessLogic (treeNode* node, treeNode** badNode)
 {
@@ -72,5 +73,60 @@ void NewAnswer (treeNode* ansNode)
     LinkRight (oldAnsNode, ansNode);
     
     VERIFY_TREE (ansNode);
+}
+
+
+void Definition (treeNode* node)
+{
+    char obj1 [ANSLEN] = {};
+    scanf ("%s", obj1);
+    treeNode* node1 = FindNode (node, (const char*) obj1);
+    //TODO - ввод до успеха
+
+    treeNode* desiredNode = FindNode (node, object);
+    printf ("%s on(a)\n", desiredNode->value);
+    int deep = 0;
+    treeNode** way = GetWay (desiredNode, &deep); 
+    PrintfWay (way, desiredNode, deep);
+}
+
+
+void Compare (treeNode* node)
+{
+    char obj1 [ANSLEN] = {};
+    char obj2 [ANSLEN] = {};
+    scanf ("%s", obj1);
+    scanf ("%s", obj2); 
+    //TODO - ввод до успеха
+    treeNode* node1 = FindNode (node, (const char*) obj1);
+    treeNode* node2 = FindNode (node, (const char*) obj2);
+
+    int deep1 = 0;
+    treeNode** way1 = GetWay (node1, &deep1); 
+    int deep2 = 0;
+    treeNode** way2 = GetWay (node2, &deep2); 
+
+    printf ("I %s i %s oba:\n", node1->value, node2->value);
+
+    while (deep1 > 1 && deep2 > 1 && way1 [deep1 - 2] == way2 [deep2 - 2])
+    {
+        if (way1 [deep1 - 2]->left == way1 [deep1 - 1]) printf ("%s\n", way1 [deep1 - 1]->value);
+        else printf ("ne %s\n", way1 [deep1 - 1]->value);
+        deep1--;
+        deep2--;
+    }
+    
+    printf ("No!\n");
+    if (deep1 != 0)
+    {
+        printf ("%s on(a)\n", node1->value);
+        PrintfWay (way1, node2, deep1);
+    }
+    
+    if (deep2 != 0)
+    {
+        printf ("A %s on(a)\n", node2->value);
+        PrintfWay (way2, node2, deep2);
+    }
 }
 #undef ANSLEN
