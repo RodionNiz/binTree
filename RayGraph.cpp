@@ -159,7 +159,7 @@ void GetInputString (const char* prompt, char* buffer, int maxLen)
         int inputWidth = MeasureText (prompt, textSize);
         DrawText (prompt, (GetScreenWidth () - inputWidth) / 2, 150, textSize, BLACK);
         Rectangle inputBox = {150, 250, 700, 80};
-        
+
         DrawRectangleLinesEx (inputBox, 3, BLACK);
         DrawText (buffer, inputBox.x + 15, (int) inputBox.y + textSize / 2, textSize, BLACK);
         if (letterCount < maxLen - 1)
@@ -203,13 +203,12 @@ void GraphDef (treeNode* node)
     wayCtx way = {.way = GetWay (desiredNode, &deep), .deep = deep};
     if (!way.way) return;
 
-    Vector2 printPos = {.x = 10, .y = 10};
-
     char header [ANSLEN + 8] = {};
     sprintf (header, "%s on(a):", desiredNode->value);
 
     while (!WindowShouldClose ())
     {   
+        Vector2 printPos = {.x = 10, .y = 10};
         BeginDrawing ();
         ClearBackground (RAYWHITE);
         PrintWayGraph (way, &printPos, desiredNode, header);
@@ -318,10 +317,13 @@ void GraphCmp (treeNode* node)
         ClearBackground (RAYWHITE);
         BeginDrawing ();
 
-        sprintf (buffer ,"I %s i %s oba:", node0->value, node1->value);
-        int sameDeep = PrintSameWayGraph (curCtx0, curCtx1, &printPos, buffer) - 1;
-        curCtx0.deep -= sameDeep;
-        curCtx1.deep -= sameDeep;
+        if (way0Ctx.way [way0Ctx.deep - 1] == way1Ctx.way [way1Ctx.deep - 1])
+        {
+            sprintf (buffer ,"I %s i %s oba:", node0->value, node1->value);
+            int sameDeep = PrintSameWayGraph (curCtx0, curCtx1, &printPos, buffer) - 1;
+            curCtx0.deep -= sameDeep;
+            curCtx1.deep -= sameDeep;
+        }
 
         if (curCtx0.deep)
         {
