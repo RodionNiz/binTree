@@ -136,6 +136,10 @@ void ConsoleMenu (tree* tree, treeNode** badAnsNode)
             Compare (tree->root);
             break;
         }
+        default :
+        {
+            break;
+        }
     }
 }
 

@@ -159,16 +159,16 @@ void GetInputString (const char* prompt, char* buffer, int maxLen)
         int inputWidth = MeasureText (prompt, textSize);
         DrawText (prompt, (GetScreenWidth () - inputWidth) / 2, 150, textSize, BLACK);
         Rectangle inputBox = {150, 250, 700, 80};
+        
         DrawRectangleLinesEx (inputBox, 3, BLACK);
         DrawText (buffer, inputBox.x + 15, (int) inputBox.y + textSize / 2, textSize, BLACK);
         if (letterCount < maxLen - 1)
         {
-            int textWidth = MeasureText (buffer, 40);
+            int textWidth = MeasureText (buffer, textSize);
             DrawText ("_", inputBox.x + 15 + textWidth, (int) inputBox.y + textSize / 2, textSize, RED);
         }
         EndDrawing ();
     }
-    CloseWindow ();
 }
 
 #define ANSLEN 64

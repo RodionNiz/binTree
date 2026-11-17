@@ -312,4 +312,3 @@ treeNode** GetWay (treeNode* node, int* deep)
 
     return way;
 }
-
