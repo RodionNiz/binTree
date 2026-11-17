@@ -48,7 +48,7 @@ void BufferClean ()
     }
 }
 
-#define ANSLEN 20
+#define ANSLEN 64
 void NewAnswer (treeNode* ansNode)
 {
     VERIFY_TREE (ansNode);
@@ -56,7 +56,7 @@ void NewAnswer (treeNode* ansNode)
     printf ("Vot yrod. Kakoy otvet?\n");
     char* newAns = (char*) calloc (ANSLEN, sizeof (char));
     if (!newAns) printf ("new ans buffer allocation err\n");
-    scanf ("%[^\n]", newAns);
+    scanf ("%63[^\n]", newAns);
     BufferClean ();
     treeNode* newAnsNode = NewTreeNode (newAns);
 
@@ -65,7 +65,7 @@ void NewAnswer (treeNode* ansNode)
     printf ("Chem %s otlichaetsa ot %s?\n V otlichii ot %s on(a):\n", ansNode->value, newAnsNode->value, ansNode->value);
     char* newTag = (char*) calloc (ANSLEN, sizeof (char));
     if (!newTag) printf ("new tag buffer allocation err\n");
-    scanf ("%[^\n]", newTag);
+    scanf ("%63[^\n]", newTag);
     BufferClean ();
     ansNode->value = newTag;
 
@@ -78,29 +78,25 @@ void NewAnswer (treeNode* ansNode)
 
 void Definition (treeNode* node)
 {
-    char obj1 [ANSLEN] = {};
-    scanf ("%s", obj1);
-    treeNode* node1 = FindNode (node, (const char*) obj1);
-    //TODO - ввод до успеха
-
-    treeNode* desiredNode = FindNode (node, object);
+    printf ("Input the object\n");
+    treeNode* desiredNode = GetNodeByStr (node);
+    if (!desiredNode) return;
     printf ("%s on(a)\n", desiredNode->value);
     int deep = 0;
     treeNode** way = GetWay (desiredNode, &deep); 
     PrintfWay (way, desiredNode, deep);
+    free (way);
 }
 
 
 void Compare (treeNode* node)
 {
-    char obj1 [ANSLEN] = {};
-    char obj2 [ANSLEN] = {};
-    scanf ("%s", obj1);
-    scanf ("%s", obj2); 
-    //TODO - ввод до успеха
-    treeNode* node1 = FindNode (node, (const char*) obj1);
-    treeNode* node2 = FindNode (node, (const char*) obj2);
-
+    printf ("Input first object\n");
+    treeNode* node1 = GetNodeByStr (node);
+    printf ("Input second object\n");
+    treeNode* node2 = GetNodeByStr (node);
+    if (!node2 || !node1) return;    
+    
     int deep1 = 0;
     treeNode** way1 = GetWay (node1, &deep1); 
     int deep2 = 0;
@@ -110,7 +106,7 @@ void Compare (treeNode* node)
 
     while (deep1 > 1 && deep2 > 1 && way1 [deep1 - 2] == way2 [deep2 - 2])
     {
-        if (way1 [deep1 - 2]->left == way1 [deep1 - 1]) printf ("%s\n", way1 [deep1 - 1]->value);
+        if (way1 [deep1 - 1]->left == way1 [deep1 - 2]) printf ("%s\n", way1 [deep1 - 1]->value);
         else printf ("ne %s\n", way1 [deep1 - 1]->value);
         deep1--;
         deep2--;
@@ -128,5 +124,36 @@ void Compare (treeNode* node)
         printf ("A %s on(a)\n", node2->value);
         PrintfWay (way2, node2, deep2);
     }
+
+    free (way1);
+    free (way2);
+}
+
+treeNode* GetNodeByStr (treeNode* node)
+{
+    char obj [ANSLEN] = {};
+    scanf ("%63[^\n]", obj);
+    BufferClean ();
+    treeNode* desiredNode = FindNode (node, obj);
+    while (!desiredNode) 
+    {
+        printf ("No such object\n");
+        scanf ("%63[^\n]", obj);
+        BufferClean ();
+        desiredNode = FindNode (node, obj);
+    }
+    return desiredNode;
 }
 #undef ANSLEN
+
+void PrintfWay (treeNode** way, treeNode* node, int deep)
+{
+    for (int i = deep - 1; i > 0; i--) 
+    {
+        if (way [i]->left == way [i - 1]) printf ("%s\n", way [i]->value);
+        else printf ("ne %s\n", way [i]->value);
+    }
+    
+    if (way [0]->left == node) printf ("%s\n", way [0]->value);
+    else printf ("ne %s\n", way [0]->value);
+}

@@ -1,6 +1,7 @@
 #include "akinator.h"
 #include "RayGraph.cpp"
 #include "ConsolGuess.cpp"
+#include <cstdio>
 
 treeNode* NewTreeNode (value_t value)
 {
@@ -209,8 +210,7 @@ void GraphDump (treeNode* node, errCtx* ctx)
     fclose  (dotFile);
 
     char* dumpCmd = (char*) calloc (100, sizeof(char));
-    //TODO - относительные пути
-    sprintf (dumpCmd, "Dot dmp.txt -Tpng -o C:/DEDdop/binTree/dumps/GraphDump%d.png", GLOBAL_DUMP_COUNT);
+    sprintf (dumpCmd, "Dot dmp.txt -Tpng -o dumps/GraphDump%d.png", GLOBAL_DUMP_COUNT);
     system  (dumpCmd);
     free    (dumpCmd);
 
@@ -267,9 +267,9 @@ static void CreateLinks (treeNode* node, FILE* dotFile)
     }
 }
 
-treeNode* FindNode (treeNode* node, const char* object)
+static treeNode* FindNode (treeNode* node, const char* object)
 {
-    if (strcmp(object, node->value) == 0)
+    if (strcmp (object, node->value) == 0)
     {
         return node;
     }
@@ -281,7 +281,7 @@ treeNode* FindNode (treeNode* node, const char* object)
         if (curNode) return curNode;
     }
 
-    else if (node->right)
+    if (node->right)
     {
         treeNode* curNode = nullptr;
         curNode = FindNode (node->right, object);
@@ -296,6 +296,11 @@ treeNode** GetWay (treeNode* node, int* deep)
     *deep = 0;
     int maxWaySize = 10;
     treeNode** way = (treeNode**) calloc (maxWaySize, sizeof (treeNode*));
+    if (!way)
+    {
+        printf ("way allocation err\n");
+        return way;
+    }
     treeNode* curNode = node;
 
     while (curNode->parent != curNode)
@@ -308,13 +313,3 @@ treeNode** GetWay (treeNode* node, int* deep)
     return way;
 }
 
-void PrintfWay (treeNode** way, treeNode* node, int deep)
-{
-    for (int i = deep - 1; i > 0; i--) 
-    {
-        if (way [i]->left == way [i - 1]) printf ("%s\n", way [i]->value);
-        else printf ("ne %s\n", way [i]->value);
-    }
-    if (way [0]->left == node) printf ("%s\n", way [0]->value);
-    else printf ("ne %s\n", way [0]->value);
-}

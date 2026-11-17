@@ -76,13 +76,13 @@ errCodes VerifyTree (treeNode* node, size_t assertline);
 static void   Check (treeNode* node, errCtx* ctx);
 
 
-tree* BuildPrev (FILE* treeFile, String* strings);
+tree* BuildPrev      (FILE* treeFile, String* strings);
 static void ParseRec (FILE* treeFile, treeNode* node, size_t* nParsingNode, String* strings);
 
 void DumpTreePrev  (treeNode* node);
 void DumpTreeIn    (treeNode* node);
 void FDumpTreePrev (FILE* dumpFile, treeNode* node);
-void GraphDump   (treeNode* node, errCtx* ctx);
+void GraphDump     (treeNode* node, errCtx* ctx);
 static void CreateNodes (treeNode* node, FILE* dotFile);
 static void CreateLinks (treeNode* node, FILE* dotFile);
 static size_t ColorGen  (treeNode* node);
@@ -90,31 +90,55 @@ static size_t ColorGen  (treeNode* node);
 
 static void BufferClean ();
 static char GetYorN     ();
-void GuessLogic  (treeNode* node, treeNode** badNode);
+void GuessLogic         (treeNode* node, treeNode** badNode);
 static void NewAnswer   (treeNode* ansNode);
 
-treeNode*  FindNode    (treeNode* node, const char* object);
-treeNode** GetWay      (treeNode* node, int* deep);
-void       Opredelenie (treeNode* node);
-void       Difference  (treeNode* node1, treeNode* node2);
-void       PrintfWay   (treeNode** way, treeNode* node, int deep);
+static treeNode*  FindNode   (treeNode* node, const char* object);
+treeNode** GetWay     (treeNode* node, int* deep);
+void       Definition (treeNode* node);
+void       Compare    (treeNode* node);
+void       PrintfWay  (treeNode** way, treeNode* node, int deep);
 
-
-struct windowCtx 
+struct button 
 {
-    float screenWidth;
-    float screenHeight;
-    Rectangle buttonY;
-    Rectangle buttonN;
+    Rectangle rect;
+    const char* text;
 };
 
-void GraphInt     (treeNode* node);
-void DrawFrame    (windowCtx ctx, treeNode* node);
-void DrawButtons  (windowCtx ctx);
-void DrawQuest    (windowCtx ctx, treeNode* node);
-void DrawCorAns   (windowCtx ctx);
-char GetYorNGraph (windowCtx ctx);
-void GetInputString (char* prompt, char* buffer, int maxLen);
-void SplitGraph (treeNode* nodeToSplit);
+void GraphInt       (treeNode* node, treeNode** badAnsNode);
+void DrawFrame      (treeNode* node, button btnY, button btnN);
+void DrawQuest      (treeNode* node);
+void DrawCorAns     ();
+char GetYorNGraph   (button btnY, button btnN);
+void GetInputString (const char* prompt, char* buffer, int maxLen);
+void SplitGraph     (treeNode* nodeToSplit);
+
+
+enum workType : char
+{
+    No = 0,
+    Guess = 1,
+    Def = 2,
+    Cmp = 3,
+};
+
+
+struct wayCtx
+{
+    treeNode** way;
+    int deep;
+};
+
+int DrawMenuButtons ();
+void Menu (tree* tree, treeNode** badAnsNode);
+void ConsoleMenu (tree* tree, treeNode** badAnsNode);
+workType GraphModeMenu ();
+treeNode* GetNodeByStr (treeNode* node);
+treeNode* GetNodeByStrGraph (treeNode* node, const char* prompt);
+void DrawButton (button btn);
+void GraphDef (treeNode* node);
+int PrintWayGraph (wayCtx way, Vector2* printPos, treeNode* node, const char* header);
+int PrintSameWayGraph (wayCtx way0, wayCtx way1, Vector2* printPos, const char* header);
+void GraphCmp (treeNode* node);
 
 #endif

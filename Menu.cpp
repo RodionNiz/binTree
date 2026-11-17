@@ -2,7 +2,7 @@
 #include "raylib/raylib.h"
 #include <cstdio>
 
-void Menu (tree* tree)
+void Menu (tree* tree, treeNode** badAnsNode)
 {
     float screenWidth = 1000;
     float screenHeight = 600;
@@ -14,21 +14,60 @@ void Menu (tree* tree)
     {
         BeginDrawing ();
         ClearBackground (RAYWHITE);
-
-        if (!answer)
+        if (!answer) answer = DrawMenuButtons ();
+        else 
         {
-            answer = DrawMenuButtons ();
             EndDrawing ();
-            if (answer == 'C') break;
+            break;
         }
-        else
+        EndDrawing ();
+    }
+
+    if (answer == 'C') 
+    {
+        CloseWindow ();
+        ConsoleMenu (tree, badAnsNode);
+        return;
+    }
+    else
+    {
+        answer = 0;
+        while (!WindowShouldClose ())
         {
-            GraphModeMenu ();
+            BeginDrawing ();
+            ClearBackground (RAYWHITE);
+            if (!answer) answer = GraphModeMenu ();
+            else
+            {
+                EndDrawing ();
+                break;
+            }
+            EndDrawing ();
         }
-        
+        switch (answer)
+        {
+            case Guess:
+            {
+                GraphInt (tree->root, badAnsNode);
+                break;
+            } 
+            case Def:
+            {
+                GraphDef (tree->root);
+                break;
+            }
+            case Cmp:
+            {
+                GraphCmp (tree->root);
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
     }
     CloseWindow ();
-    if (answer == 'C') ConsoleMenu (tree);
 }
 
 int DrawMenuButtons ()
@@ -36,29 +75,30 @@ int DrawMenuButtons ()
     float btnWidth = 300.0f;
     float btnHeight = 100.0f;
     float offset = 25.0f;
-    float round = 0.2f;
-    int segments = 10;
-    float thick = 3.0f;
-    int textSize = 25;
 
     float totalHeight = btnHeight * 2 + offset;
     float startX = (GetScreenWidth () - btnWidth) / 2.0f;
     float startY = (GetScreenHeight () - totalHeight) / 2.0f;
 
-    Rectangle visualBtn = { startX, startY, btnWidth, btnHeight };
-    Rectangle consoleBtn = { startX, startY + btnHeight + offset, btnWidth, btnHeight };
+    Rectangle visualBtn = {startX, startY, btnWidth, btnHeight};
+    Rectangle consoleBtn = {startX, startY + btnHeight + offset, btnWidth, btnHeight};
+    button btnVis = 
+    {
+        .rect = {startX, startY, btnWidth, btnHeight},
+        .text = "Visual"
+    };
+    button btnCns = 
+    {
+        .rect = {startX, startY + btnHeight + offset, btnWidth, btnHeight},
+        .text = "Console"
+    };
 
-    DrawRectangleRoundedLinesEx (visualBtn, round, segments, thick, BLACK);
-    int textWidthVis = MeasureText("visual", textSize);
-    DrawText("Visual", visualBtn.x + (btnWidth - textWidthVis) / 2.0f, visualBtn.y + (btnHeight - textSize) / 2.0f, textSize, BLACK);
-
-    DrawRectangleRoundedLinesEx (consoleBtn, round, segments, thick, BLACK);
-    int textWidthCon = MeasureText("console", textSize);
-    DrawText("Console", consoleBtn.x + (btnWidth - textWidthCon) / 2.0f, consoleBtn.y + (btnHeight - textSize) / 2.0f, textSize, BLACK);
-
-    Vector2 pos = GetMousePosition ();
+    DrawButton (btnVis);
+    DrawButton (btnCns);
+    
     if (IsMouseButtonPressed (MOUSE_LEFT_BUTTON))
     {
+        Vector2 pos = GetMousePosition ();
         if (CheckCollisionPointRec (pos, visualBtn)) return 'V';
         else if (CheckCollisionPointRec (pos, consoleBtn)) return 'C';
     }
@@ -66,30 +106,24 @@ int DrawMenuButtons ()
     return 0;
 }
 
-enum workType
+void ConsoleMenu (tree* tree, treeNode** badAnsNode)
 {
-    Guess = 1,
-    Def = 2,
-    Cmp = 3,
-};
-
-void ConsoleMenu (tree* tree)
-{
-    printf ("If you want to guess an object press 1\n"
-            "If you want to get an object definition press 2"
-            "If you want to compare two objects press 3");
+    printf ("\n\n\nIf you want to guess an object press 1\n"
+            "If you want to get an object definition press 2\n"
+            "If you want to compare two objects press 3\n\n");
 
     int answer = 0;
     while (!(answer > 0 && answer < 4))
     {
         if (!scanf ("%d", &answer) || !(answer > 0 && answer < 4)) printf ("Err, unsupported answer\n");
+        BufferClean ();
     }
 
     switch (answer)
     {
         case Guess :
         {
-            GuessLogic (tree->root, badNode);
+            GuessLogic (tree->root, badAnsNode);
             break;
         }
         case Def :
@@ -105,7 +139,46 @@ void ConsoleMenu (tree* tree)
     }
 }
 
-void GraphModeMenu (tree* tree)
+workType GraphModeMenu ()
 {
+    float btnWidth = 350.0f;
+    float btnHeight = 100.0f;
+    float offset = 25.0f;
+
+    float totalHeight = btnHeight * 3 + offset * 2;
     
+    float startX = (GetScreenWidth () - btnWidth) / 2.0f;
+    float startY = (GetScreenHeight () - totalHeight) / 2.0f;
+
+    button buttonAkin = 
+    {
+        .rect = {startX, startY, btnWidth, btnHeight},
+        .text = "akinator"
+    };
+
+    button buttonDef = 
+    {
+        .rect = {startX, startY + btnHeight + offset, btnWidth, btnHeight},
+        .text = "definition"
+    };
+
+    button buttonCmp = 
+    {
+        .rect = {startX, startY + 2 * (btnHeight + offset), btnWidth, btnHeight},
+        .text = "compare"
+    };
+
+    DrawButton (buttonAkin);
+    DrawButton (buttonDef);
+    DrawButton (buttonCmp);
+
+    if (IsMouseButtonPressed (MOUSE_LEFT_BUTTON))
+    {
+        Vector2 pos = GetMousePosition ();
+        if (CheckCollisionPointRec (pos, buttonAkin.rect)) return Guess;
+        else if (CheckCollisionPointRec (pos, buttonDef.rect)) return Def;
+        else if (CheckCollisionPointRec (pos, buttonCmp.rect)) return Cmp;
+    }
+
+    return No;
 }
